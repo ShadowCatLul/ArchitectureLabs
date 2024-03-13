@@ -1,9 +1,9 @@
 workspace {
     name "Сервис поиска попутчиков"
-    description "Архитектура сервиса по поиску попутчиков, в котором должны быть следующие требования:\
-    - Пользователь (водитель) должен уметь создавать маршрут\
-    - Пользователь (попутчик) должен уметь создавать поездку\
-    - Водитель и попутчик могут найти друг друга по поездке и маршруту соответственно"
+    description "Данный сервис предназначен для поиска попутчиков и включает следующие функции:\
+    - Возможность для водителя создать маршрут\
+    - Возможность для попутчика создать поездку\
+    - Возможность для водителя и попутчика найти друг друга по маршруту и поездке"
 
     !identifiers hierarchical
 
@@ -16,93 +16,92 @@ workspace {
         user_passenger = person "Пассажир-попутчик"
 
         MainService = softwareSystem "MainService" {
-            description "Сервис поиска попутчиков"
+            description "Система для сопоставления водителей и пассажиров"
 
             proxy = container "Proxy service" {
-                description "Сервис прокси, который занимается переадресацией запросов"
+                description "Прокси-сервис для перенаправления запросов"
             }
 
             client_service = container "Client Service" {
-                description "Клиентский сервис, отвечающий за хранение клиентов и их особенностей."
+                description "Сервис для управления данными клиентов"
 
                 api = component "API" {
-                    description "API сервиса"
-                    technology "Go"
+                    description "Интерфейс программирования приложений"
+                    technology "Python"
                     tags "API"
                 }
 
                 clients_database = component "Clients Database" {
-                    description "Хранилище пользователей"
+                    description "База данных клиентов"
                     technology "PostgreSQL"
                     tags "database"
                 }  
 
-                api -> clients_database "Сохранение пользователей"
-                clients_database -> api "Авторизация, запросы на поиск пользователей"
+                api -> clients_database "Запись данных о пользователях"
+                clients_database -> api "Авторизация и поиск пользователей"
             }
 
             path_service = container "Path tracker" {
-                description "Сервис трекер маршрутов и поездок"
+                description "Сервис для отслеживания маршрутов и поездок"
 
                 api = component "API" {
-                    description "API сервиса"
-                    technology "Go"
+                    description "Интерфейс программирования приложений"
+                    technology "Python"
                     tags "API"
                 }
 
-
                 group "Слой хранения" {
                     route_table = component "Route table" {
-                        description "Таблица всех маршрутов водителей"
+                        description "Таблица маршрутов водителей"
                         technology "PostgreSQL"
                         tags "database"
                     }
 
                     travel_table = component "Travel table" {
-                        description "Таблица всех поездок пользователей"
+                        description "Таблица поездок пассажиров"
                         technology "PostgreSQL"
                         tags "database"
                     }
                 }
 
                 route_travel_searcher = component "Search worker" {
-                    description "Какой-то фоновый процесс, который будет заниматься поиском попутчиков к каждому маршруту"
-                    technology "Go"
+                    description "Фоновый процесс для поиска подходящих попутчиков"
+                    technology "Python"
                     tags "worker"
                 }
 
                 result_database = component "Result database" {
-                    description "Хранение результата какому пользователю какой маршрут достался (возможен выбор)"
+                    description "База данных для хранения результатов сопоставления маршрутов и попутчиков"
                     technology "Redis"
                     tags "database"
                 }
 
-                api -> route_table "Сохранение маршрутов"
-                api -> travel_table "Сохранение поездок"
+                api -> route_table "Регистрация маршрутов"
+                api -> travel_table "Регистрация поездок"
 
-                route_travel_searcher -> route_table "Поиск поездок по маршрутам"
-                route_travel_searcher -> travel_table "Поиск поездок по маршрутам"
+                route_travel_searcher -> route_table "Поиск подходящих поездок для маршрутов"
+                route_travel_searcher -> travel_table "Поиск подходящих маршрутов для поездок"
 
-                route_travel_searcher -> result_database "Соотношение id попутчика с водителями и наоборот" 
+                route_travel_searcher -> result_database "Связывание попутчиков с маршрутами" 
 
-                result_database -> api "Отдача пользователю результата информации о том с кем тот едет"
+                result_database -> api "Возврат результатов пользователям"
             }
 
-            proxy -> client_service "Создание пользователя, поиск пользователя, авторизация"
-            client_service -> proxy "При создании/авторизации пользователя возвращается client_id"
+            proxy -> client_service "Регистрация и поиск пользователей, авторизация"
+            client_service -> proxy "Возврат client_id при создании/авторизации пользователя"
 
-            proxy -> path_service "Создание, получение маршрутов/поездок; отдача подключения поездок к маршруту"
+            proxy -> path_service "Управление маршрутами и поездками, связывание поездок с маршрутами"
             
         }
 
-        user_driver -> MainService "API запросы от водителя в сервис и ответ"
-        user_driver -> MainService.proxy "API запросы от водителя в сервис и ответ"
-        user_passenger -> MainService "API запросы от пассажира в сервис и ответ"
-        user_passenger -> MainService.proxy "API запросы от пассажира в сервис и ответ"
+        user_driver -> MainService "Обмен данными между водителем и сервисом через API"
+        user_driver -> MainService.proxy "Обмен данными между водителем и сервисом через API"
+        user_passenger -> MainService "Обмен данными между пассажиром и сервисом через API"
+        user_passenger -> MainService.proxy "Обмен данными между пассажиром и сервисом через API"
 
 
 
-        prodution = deploymentEnvironment "Production" {
+        produсtion = deploymentEnvironment "Production" {
             deploymentGroup "MainService prod"
 
             client_service = deploymentNode "Client Services" {
@@ -148,7 +147,7 @@ workspace {
             user_driver -> MainService.proxy "POST CreateUser/Authorize"
             user_passenger -> MainService.proxy "POST CreateUser/Authorize"
 
-            MainService.proxy -> MainService.client_service "Переадресация запроса"
+            MainService.proxy -> MainService.client_service "Перенаправление запроса"
         }
 
         dynamic MainService "UC02" "Поиск пользователя по логину или маске (имя, фамилия)" {
@@ -157,7 +156,7 @@ workspace {
             user_driver -> MainService.proxy "GET UserByUsername/UserByFirstName"
             user_passenger -> MainService.proxy "GET UserByUsername/UserByFirstName"
 
-            MainService.proxy -> MainService.client_service "Переадресация запроса"
+            MainService.proxy -> MainService.client_service "Перенаправление запроса"
         }
 
         dynamic MainService "UC11" "Создание маршрута/поездки" {
@@ -166,7 +165,7 @@ workspace {
             user_driver -> MainService.proxy "POST CreateRoute"
             user_passenger -> MainService.proxy "POST CreateTravel"
             
-            MainService.proxy -> MainService.path_service "Переадресация запроса (client_id)"
+            MainService.proxy -> MainService.path_service "Перенаправление запроса (client_id)"
         }
 
         dynamic MainService "UC12" "Получение маршрутов пользователя" {
@@ -174,7 +173,7 @@ workspace {
 
             user_driver -> MainService.proxy "GET UserRoute (client_id)"
 
-            MainService.proxy -> MainService.path_service "Переадресация запроса (client_id)"
+            MainService.proxy -> MainService.path_service "Перенаправление запроса (client_id)"
         }
 
         dynamic MainService "UC13" "Получение информации о поездке" {
@@ -182,7 +181,7 @@ workspace {
 
             user_driver -> MainService.proxy "GET UserTravel (client_id)"
 
-            MainService.proxy -> MainService.path_service "Переадресация запроса (client_id)"
+            MainService.proxy -> MainService.path_service "Перенаправление запроса (client_id)"
         }
 
         dynamic MainService "UC14" "Подключение пользователя к поездке" {
@@ -194,7 +193,7 @@ workspace {
             MainService.proxy -> user_passenger  "[polling] GET UserTravel (client_id)"
         }
 
-        deployment MainService prodution {
+        deployment MainService produсtion {
             autoLayout
             include *
         }
