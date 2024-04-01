@@ -4,9 +4,6 @@ from app.schema import UserSchema
 
 def add_new_user(db: Session, user: UserSchema):
     
-    # hash_password = hashlib.sha256(user.password.encode()).hexdigest()
-    # print(hash_password)
-
     _new_user = User(first_name=user.first_name,
                 last_name=user.last_name,
                 date_joined=user.date_joined,

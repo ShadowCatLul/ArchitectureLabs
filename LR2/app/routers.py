@@ -43,13 +43,13 @@ async def get_user_by_first_name(request: str, db: Session = Depends(get_db)):
         "status_code": "200"
     }
 
-@router.get("/get_by_second_name")
-async def get_by_second_name(request: str, db: Session = Depends(get_db)):
+@router.get("/get_by_last_name")
+async def get_by_last_name(request: str, db: Session = Depends(get_db)):
 
-    _user = read.get_user_by_second_name(db, second_name=request)
+    _user = read.get_user_by_last_name(db, last_name=request)
 
     return {
-        "message"    : f"user '{_user.second_name}' found in postgres",
+        "message"    : f"user '{_user.last_name}' found in postgres",
         "user"       : _user,
         "status_code": "200"
     }
@@ -76,10 +76,12 @@ async def get_all(user_id: int, db: Session = Depends(get_db)):
 
 @router.patch("/update")
 async def update_user(user_id: int, new_first_name: str, new_second_name: str,
-                      new_password: str, new_login: str, db: Session = Depends(get_db),):
+                      new_password: str, new_login: str, new_email: str, new_status_is_active: bool,
+                      new_status_is_superuser: bool, new_status_is_verified: bool, db: Session = Depends(get_db)):
 
     _user = update.update_user(db, user_id=user_id, first_name=new_first_name, second_name=new_second_name,
-                             password=new_password, login=new_login)
+                             password=new_password, login=new_login,email=new_email,is_active=new_status_is_active,
+                             is_superuser=new_status_is_superuser, is_verified=new_status_is_verified)
     return {
         "message"    : f"user {user_id} update",
         "users"      : _user,
