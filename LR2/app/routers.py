@@ -1,6 +1,6 @@
 
-from fastapi import Depends
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, HTTPException, Header
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from app.schema import UserSchema
 from typing import List, Annotated
 import CRUD
@@ -9,6 +9,10 @@ from app.database import engine, SessionLocal, Base, User
 from sqlalchemy.orm import Session
 from fastapi import Depends, Request
 from typing import Optional
+import jwt
+import hashlib
+from datetime import timedelta, datetime
+
 
 def get_db():
     db = SessionLocal()
@@ -20,6 +24,42 @@ def get_db():
 db_dependency = Annotated[Session, Depends(get_db)]
 
 router = APIRouter()
+
+def check_user_token(auth: str = Header(...)):
+    print(f'auth: {auth}')
+    print(f'test split: {auth.split(".")}')
+    payload = jwt.decode(auth, "Well_Done", algorithms=["HS256"])
+    user_id: str = payload.get("sub")
+    if user_id is None:
+        raise HTTPException(
+            status_code=402, detail="Invalid authentication credentials")
+
+    return user_id
+
+
+@router.post("/login")
+async def login(creds: HTTPBasicCredentials = Depends(HTTPBasic()), db: Session = Depends(get_db)):
+    _user = read.get_user_by_login(db, creds.username)
+
+
+    if _user is None:
+        raise HTTPException(status_code=401, detail="user not found")
+
+    if _user.login != creds.username:
+        raise HTTPException(status_code=401, detail="wrong login")
+
+    hashed_password = hashlib.sha256(creds.password.encode()).hexdigest()
+    
+    if hashed_password != _user.hashed_password:
+        raise HTTPException(status_code=401, detail="wrong password")
+
+    exp_date = datetime.now() + timedelta(minutes=15)
+
+    token_data = {"sub": _user.id, "exp": exp_date}
+    token = jwt.encode(token_data, "Well_Done", algorithm="HS256")
+    return {"access_token": token, "token_type": "bearer"}
+
+
 
 @router.post("/add")
 async def create_user(request: UserSchema, db: Session = Depends(get_db)):
