@@ -1,8 +1,9 @@
 ## ЛР1 : Проектирование программной системы
-верхний уровень всех сервисов
+Верхний уровень всех сервисов
 ![image](https://github.com/ShadowCatLul/ArchitectureLabs/assets/64269779/5c401213-bd1f-4183-8005-31f69d9b07e7)
 
-бд
+БД
+
 ![image](https://github.com/ShadowCatLul/ArchitectureLabs/assets/64269779/f31d769a-437a-4fe6-98cc-49654f6fffef)
 
 Процесс работы сервисов
