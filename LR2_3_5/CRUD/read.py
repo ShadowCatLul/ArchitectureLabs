@@ -18,7 +18,6 @@ def get_user_by_last_name(db: Session, last_name: str):
 def get_user_by_date_joined(db: Session, date_joined: datetime.datetime.date):
     return db.query(User).filter(User.date_joined == date_joined).first()
 
-
 def get_user_by_login(db: Session, login: str):
     return db.query(User).filter(User.login == login).first()
 
