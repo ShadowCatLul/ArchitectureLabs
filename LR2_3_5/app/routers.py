@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Header
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from app.schema import UserSchema
 from typing import List, Annotated
+from app.generate_user import generate_user_db
 import CRUD
 from CRUD import create, read, update, delete
 from app.database import engine, SessionLocal, Base, User
@@ -59,7 +60,11 @@ async def login(creds: HTTPBasicCredentials = Depends(HTTPBasic()), db: Session 
     token = jwt.encode(token_data, "Well_Done", algorithm="HS256")
     return {"access_token": token, "token_type": "bearer"}
 
-
+@router.post("/post_random_users/{count}")
+async def post_random_users(count: int, db: Session = Depends(get_db)):
+    users = generate_user_db(count)
+    for user in users:
+        create.add_new_user(db, user)
 
 @router.post("/add")
 async def create_user(request: UserSchema, db: Session = Depends(get_db)):
@@ -112,10 +117,11 @@ async def get_all(start: int, end: int, db: Session = Depends(get_db)):
     search = redis_db.lrange(key, 0, -1)
     if redis_db.lrange(key, 0, -1): return f'redic_search{search}'
 
+    _users = read.get_user(db, skip=start, limit=end)
     #всех юзеровв, который попали в область ключа нужно закинуть поближе в бд
     redis_db.rpush(key,  *[str(u.id) for u in _users])
     redis_db.expire(key, 30)
-    _users = read.get_user(db, skip=start, limit=end)
+
     return {
         "message"    : f"users found",
         "users"      : _users,
