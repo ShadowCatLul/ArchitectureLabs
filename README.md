@@ -22,9 +22,7 @@ UC14
 
 
 
-## ЛР2 : Stateful сервис для RDBMS
-## ЛР4 : Аутентификация
-## ЛР5 : Data Cache
+## ЛР2 : Stateful сервис для RDBMS; ЛР4 : Аутентификация; ЛР5 : Data Cache
 Генерация юзеров
 ![image](https://github.com/ShadowCatLul/ArchitectureLabs/assets/64269779/5a291efd-babc-453c-b8bc-a18141229423)
 Эти же юзеры в бд через pgadmin, видно, что пароли зашифрованные
